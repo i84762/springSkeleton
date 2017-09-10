@@ -65,9 +65,6 @@ public class User implements CoreEntity
 	
 	@Column(name = "enabled")
 	private boolean enabled;		
-
-	@OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-	private List<Review> reviews;
 	
 	@OneToMany(fetch = FetchType.LAZY)
 	@JoinTable(
@@ -156,16 +153,6 @@ public class User implements CoreEntity
 	{
 		this.email = email;
 	}
-
-	public List<Review> getReviews() 
-	{
-		return reviews;
-	}
-
-	public void setReviews(List<Review> reviews) 
-	{
-		this.reviews = reviews;
-	}	
 
 	public String getVerificationToken()
 	{

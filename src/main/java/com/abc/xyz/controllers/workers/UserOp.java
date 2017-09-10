@@ -13,17 +13,13 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.abc.xyz.config.Resource;
-import com.abc.xyz.dto.SubscribeView;
 import com.abc.xyz.dto.UserView;
-import com.abc.xyz.service.SubscribeService;
 import com.abc.xyz.service.UserService;
 import com.abc.xyz.validation.ChangePasswordValidator;
-import com.abc.xyz.validation.SubscribeValidator;
 import com.abc.xyz.validation.UserValidator;
 
 /**
@@ -36,9 +32,6 @@ public class UserOp
 {
 	@Autowired
 	private UserService userService;
-	
-	@Autowired
-	private SubscribeService subscribeService;
 	
     @Autowired
     private JavaMailSender mailSender;    
@@ -55,8 +48,6 @@ public class UserOp
 	@Autowired
     private PasswordEncoder passwordEncoder;	
     
-    @Autowired
-    private SubscribeValidator subscribeValidator;    
     
     @Autowired
     private ChangePasswordValidator changePasswordValidator;
@@ -90,30 +81,6 @@ public class UserOp
 			else
 				modelAndView.addObject("msg", msg);
 	}
-	
-	public ModelAndView subscribe(HttpServletRequest request, String email)
-	{
-		ModelAndView modelAndView = new ModelAndView();
-		SubscribeView view = new SubscribeView();
-		view.setEmail(email);
-		view.setRequestedOn(new Date());
-		view.setVerificationTokenDate(new Date());
-		String token = UUID.randomUUID().toString();
-		view.setVerificationToken(token);
-		BindingResult result = new BeanPropertyBindingResult(view, "SubscribeView");
-		subscribeValidator.validate(view, result);		
-			if(result.hasErrors())
-				modelAndView.addObject("error", result.getAllErrors().get(0).getDefaultMessage());	
-			else
-			{	
-				view.setId(subscribeService.save(view));
-				SimpleMailMessage message = constructVerifySubscribeEmail(getAppUrl(request), token, view);		
-				sendMail(message);
-				modelAndView.addObject("msg", resource.getMsg("A0010"));
-			}
-		return modelAndView;
-	}	
-	
 	public ModelAndView registerUserAccount(HttpServletRequest request, 
 												BindingResult result, 
 												UserView userView, 
@@ -138,34 +105,6 @@ public class UserOp
     	
         return model;
     }	
-
-	public boolean verifySubscribeEmail(ModelAndView view, String token, Long id)
-	{
-		String title = null;
-		String msg = null;
-		
-			if(subscribeService.alreadySubscribed(id))
-			{
-				msg = resource.getMsg("A0004");
-	        	title = "Hey!";
-			}
-        boolean validToken = subscribeService.validateVerificationToken(id, token);
-	        if(!validToken) 
-	        {
-	        	msg = resource.getMsg("A0004");
-	        	title = "Oops!";
-	        }
-	        else
-        	{
-	        	subscribeService.startSubscribe(id, true);
-	        	msg = resource.getMsg("A0014");
-	        	title = "Congratulations!";
-        	}
-        view.addObject("title", title);
-        view.addObject("msg", msg);
-        return validToken;
-	}
-	
 	public boolean verifyUser(ModelAndView view, long userId, String token)
 	{
     	String msg = null;
@@ -274,17 +213,6 @@ public class UserOp
 	    		resource.getMsg("A0012"),
 	    		resource.getMsg("A0011") + " " + url);
 	}	
-
-	private SimpleMailMessage constructVerifySubscribeEmail(String contextPath, String token, SubscribeView view) 
-	{
-		String url = contextPath + "/subscribeEmail?id=" + view.getId() + "&token=" + token;		
-		return constructMail(view.getEmail(), 
-	    		env.getProperty("support.email"),
-	    		resource.getMsg("A0013"),
-	    		resource.getMsg("A0003") + " " + url);
-	}	
-
-	
     private String getAppUrl(HttpServletRequest request)
     {
         return "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();

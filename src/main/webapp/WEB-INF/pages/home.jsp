@@ -13,10 +13,10 @@
 <body class="hold-transition skin-blue sidebar-mini">
 	<%@include file="_userLogin.jsp"%>
 	<div class="wrapper">
-		<jsp:include page="sidebar.jsp" />
+		<%-- <jsp:include page="sidebar.jsp" /> --%>
 		<div class="content-wrapper" id="_centerDiv">
 			<div id="mainContentTop">
-				<jsp:include page="mct_search.jsp" />
+			<%-- 	<jsp:include page="mct_search.jsp" /> --%>
 			</div>
 			<!-- Top Content Ends -->
 			<!-- Main content -->
